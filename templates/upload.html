@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document - SciSummarize{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <h1>Upload Document</h1>
+    <p>Upload your scientific document to generate a comprehensive summary.</p>
+    
+    <div class="upload-form-container">
+        <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+            <div class="file-upload-area" id="dropArea">
+                <input type="file" id="fileInput" name="file" accept=".pdf,.docx,.txt" hidden/>
+                <div class="upload-icon">
+                    <img src="/static/images/icons/upload.svg" alt="Upload icon">
+                </div>
+                <p>Drag and drop your file here or</p>
+                <button type="button" id="browseButton" class="btn btn-secondary">Browse Files</button>
+                <p class="file-types">Supported formats: PDF, DOCX, TXT</p>
+                <p id="fileName" class="file-name"></p>
+            </div>
+            
+            <div class="summary-options">
+                <h3>Summary Options</h3>
+                <div class="form-group">
+                    <label for="summaryLength">Summary Length:</label>
+                    <select id="summaryLength" name="summaryLength" class="form-control">
+                        <option value="short">Short (~250 words)</option>
+                        <option value="medium" selected>Medium (~500 words)</option>
+                        <option value="long">Long (~1000 words)</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <div id="customLengthContainer" class="custom-length-container" style="display: none;">
+                        <label for="customLength">Specify word count:</label>
+                        <input type="number" id="customLength" name="customLength" min="100" max="2000" value="500">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="focusArea">Focus Areas (optional):</label>
+                    <select id="focusArea" name="focusArea" class="form-control" multiple>
+                        <option value="methods">Methodology</option>
+                        <option value="results">Results</option>
+                        <option value="conclusion">Conclusions</option>
+                        <option value="discussion">Discussion</option>
+                        <option value="background">Background</option>
+                    </select>
+                    <small>Hold Ctrl/Cmd to select multiple areas</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Include:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="includeKeypoints" checked> Key Points
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="includeTables"> Tables & Figures
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="includeReferences"> References
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" id="submitButton" class="btn btn-primary btn-block">Generate Summary</button>
+            </div>
+        </form>
+        
+        <div id="uploadStatus" class="upload-status" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p id="statusMessage">Processing your document...</p>
+            <div id="progressContainer" class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="upload-tips">
+        <h3>Tips for Better Results</h3>
+        <ul>
+            <li>Ensure your document is properly formatted for best analysis.</li>
+            <li>For research papers, include the abstract for more accurate summarization.</li>
+            <li>Larger documents may take longer to process.</li>
+            <li>Higher quality scans of PDF documents yield better results.</li>
+        </ul>
+    </div>
+</div>
+
+<script src="/static/js/upload.js"></script>
+{% endblock %} 

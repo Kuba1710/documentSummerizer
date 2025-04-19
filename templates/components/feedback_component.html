@@ -1,0 +1,81 @@
+<div class="border-t pt-3 mb-3" id="feedback-component">
+  <p class="text-sm text-gray-600 mb-2">Twoja opinia pomoże nam ulepszyć system. Czy to podsumowanie jest przydatne?</p>
+  
+  {% if not summary.feedback %}
+    <div class="flex gap-2" id="feedback-buttons">
+      <button 
+        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded"
+        hx-post="/api/summaries/{{ summary.id }}/feedback"
+        hx-vals='{"is_accepted": true}'
+        hx-target="#feedback-component"
+        hx-swap="innerHTML"
+      >
+        <i class="fas fa-thumbs-up mr-1"></i> Tak, przydatne
+      </button>
+      <button 
+        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+        hx-post="/api/summaries/{{ summary.id }}/feedback"
+        hx-vals='{"is_accepted": false}'
+        hx-target="#feedback-component"
+        hx-swap="innerHTML"
+      >
+        <i class="fas fa-thumbs-down mr-1"></i> Nie, nieprzydatne
+      </button>
+    </div>
+  {% else %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-3 rounded">
+      <p class="font-semibold">Dziękujemy za ocenę!</p>
+      <p>
+        Twoja opinia: 
+        {% if summary.feedback.is_accepted %}
+          <span class="text-green-600 font-medium">
+            <i class="fas fa-thumbs-up"></i> Przydatne
+          </span>
+        {% else %}
+          <span class="text-red-600 font-medium">
+            <i class="fas fa-thumbs-down"></i> Nieprzydatne
+          </span>
+        {% endif %}
+      </p>
+      <button 
+        class="text-sm text-blue-600 hover:text-blue-800 mt-1"
+        hx-delete="/api/summaries/{{ summary.id }}/feedback"
+        hx-target="#feedback-component"
+        hx-swap="innerHTML"
+      >
+        Zmień ocenę
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  // Obsługa animacji po wysłaniu oceny
+  document.addEventListener('htmx:beforeSwap', function(evt) {
+    if (evt.detail.requestConfig.path.includes('/feedback') && evt.detail.requestConfig.verb === 'POST') {
+      // Dodaj klasę animacji przed zamianą zawartości
+      document.getElementById('feedback-component').classList.add('opacity-50', 'transition-opacity');
+    }
+  });
+  
+  // Wyświetlenie komunikatu o błędzie, jeśli nie udało się wysłać oceny
+  document.addEventListener('htmx:responseError', function(evt) {
+    if (evt.detail.requestConfig.path.includes('/feedback')) {
+      const feedbackComponent = document.getElementById('feedback-component');
+      
+      // Dodaj komunikat o błędzie
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'mt-2 text-red-500 text-sm';
+      errorMessage.textContent = 'Wystąpił błąd podczas zapisywania oceny. Spróbuj ponownie później.';
+      
+      feedbackComponent.appendChild(errorMessage);
+      
+      // Usuń komunikat po 3 sekundach
+      setTimeout(function() {
+        if (errorMessage.parentNode) {
+          errorMessage.parentNode.removeChild(errorMessage);
+        }
+      }, 3000);
+    }
+  });
+</script> 

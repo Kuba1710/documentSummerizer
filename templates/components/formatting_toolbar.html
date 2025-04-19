@@ -1,0 +1,143 @@
+<div class="border-b pb-3 mb-3" id="formatting-toolbar">
+  <div class="flex flex-wrap gap-2">
+    <!-- Podstawowe formatowanie tekstu -->
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Pogrubienie" 
+      onclick="document.execCommand('bold', false, null)"
+    >
+      <i class="fas fa-bold"></i>
+    </button>
+    
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Kursywa" 
+      onclick="document.execCommand('italic', false, null)"
+    >
+      <i class="fas fa-italic"></i>
+    </button>
+    
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Podkreślenie" 
+      onclick="document.execCommand('underline', false, null)"
+    >
+      <i class="fas fa-underline"></i>
+    </button>
+    
+    <!-- Separator -->
+    <div class="w-px h-8 bg-gray-300 mx-1"></div>
+    
+    <!-- Wyrównanie tekstu -->
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Wyrównaj do lewej" 
+      onclick="document.execCommand('justifyLeft', false, null)"
+    >
+      <i class="fas fa-align-left"></i>
+    </button>
+    
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Wyśrodkuj" 
+      onclick="document.execCommand('justifyCenter', false, null)"
+    >
+      <i class="fas fa-align-center"></i>
+    </button>
+    
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Wyrównaj do prawej" 
+      onclick="document.execCommand('justifyRight', false, null)"
+    >
+      <i class="fas fa-align-right"></i>
+    </button>
+    
+    <!-- Separator -->
+    <div class="w-px h-8 bg-gray-300 mx-1"></div>
+    
+    <!-- Listy -->
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Lista numerowana" 
+      onclick="document.execCommand('insertOrderedList', false, null)"
+    >
+      <i class="fas fa-list-ol"></i>
+    </button>
+    
+    <button 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      title="Lista punktowana" 
+      onclick="document.execCommand('insertUnorderedList', false, null)"
+    >
+      <i class="fas fa-list-ul"></i>
+    </button>
+    
+    <!-- Separator -->
+    <div class="w-px h-8 bg-gray-300 mx-1"></div>
+    
+    <!-- Rozmiar i kolor tekstu -->
+    <select 
+      class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700" 
+      onchange="document.execCommand('fontSize', false, this.value); this.selectedIndex = 0;"
+    >
+      <option value="">Rozmiar tekstu</option>
+      <option value="1">Bardzo mały</option>
+      <option value="2">Mały</option>
+      <option value="3">Normalny</option>
+      <option value="4">Duży</option>
+      <option value="5">Bardzo duży</option>
+      <option value="6">Ogromny</option>
+      <option value="7">Maksymalny</option>
+    </select>
+    
+    <div class="relative inline-block">
+      <input 
+        type="color" 
+        id="text-color-picker"
+        class="h-8 w-8 rounded cursor-pointer opacity-0 absolute top-0 left-0 z-10" 
+        title="Kolor tekstu" 
+        onchange="document.execCommand('foreColor', false, this.value)"
+      />
+      <button 
+        class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 flex items-center" 
+        title="Kolor tekstu"
+      >
+        <i class="fas fa-font"></i>
+        <div class="w-3 h-3 ml-1 border border-gray-400 rounded-sm" id="current-color-indicator"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Aktualizacja wskaźnika koloru
+  document.getElementById('text-color-picker').addEventListener('change', function() {
+    document.getElementById('current-color-indicator').style.backgroundColor = this.value;
+  });
+  
+  // Obserwowanie zmian stanu formatowania i aktualizacja aktywnych przycisków
+  document.addEventListener('selectionchange', function() {
+    const boldButton = document.querySelector('[title="Pogrubienie"]');
+    const italicButton = document.querySelector('[title="Kursywa"]');
+    const underlineButton = document.querySelector('[title="Podkreślenie"]');
+    
+    if (document.queryCommandState('bold')) {
+      boldButton.classList.add('bg-blue-200');
+    } else {
+      boldButton.classList.remove('bg-blue-200');
+    }
+    
+    if (document.queryCommandState('italic')) {
+      italicButton.classList.add('bg-blue-200');
+    } else {
+      italicButton.classList.remove('bg-blue-200');
+    }
+    
+    if (document.queryCommandState('underline')) {
+      underlineButton.classList.add('bg-blue-200');
+    } else {
+      underlineButton.classList.remove('bg-blue-200');
+    }
+  });
+</script> 

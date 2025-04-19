@@ -3,9 +3,12 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import time
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import os
 
 from db.database import init_db
-from routers import summary_router, auth_router
+from routers import summary_router, auth_router, page_router
 
 # Konfiguracja loggera
 logging.basicConfig(
@@ -40,6 +43,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Konfiguracja ścieżek do szablonów i plików statycznych
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Montowanie plików statycznych
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
 # Dodawanie CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -70,6 +80,7 @@ async def log_requests(request: Request, call_next):
 # Dodawanie routerów
 app.include_router(summary_router.router)
 app.include_router(auth_router.router)
+app.include_router(page_router.router)
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

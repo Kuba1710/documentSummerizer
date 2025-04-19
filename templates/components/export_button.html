@@ -1,0 +1,74 @@
+<div class="text-right" id="export-button-container">
+  <a 
+    href="/summaries/{{ summary.id }}/preview-export"
+    hx-get="/summaries/{{ summary.id }}/preview-export"
+    hx-push-url="true"
+    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded inline-flex items-center"
+  >
+    <i class="fas fa-file-pdf mr-2"></i> Eksportuj do PDF
+  </a>
+</div>
+
+<script>
+  // Sprawdzanie czy podsumowanie ma treść przed eksportem
+  document.addEventListener('htmx:beforeRequest', function(evt) {
+    if (evt.detail.requestConfig.path.includes('/preview-export')) {
+      const contentElement = document.getElementById('summary-content');
+      
+      // Sprawdź, czy treść podsumowania nie jest pusta
+      if (!contentElement || !contentElement.innerText.trim()) {
+        // Zatrzymaj żądanie
+        evt.preventDefault();
+        
+        // Pokaż komunikat o błędzie
+        showExportError('Nie można wyeksportować pustego podsumowania.');
+      }
+    }
+  });
+  
+  // Wyświetlanie komunikatu o błędzie eksportu
+  function showExportError(message) {
+    // Usuń poprzednie komunikaty o błędzie
+    const existingError = document.getElementById('export-error');
+    if (existingError) existingError.remove();
+    
+    // Utwórz nowy komunikat o błędzie
+    const errorElement = document.createElement('div');
+    errorElement.id = 'export-error';
+    errorElement.className = 'text-red-500 text-sm mt-2';
+    errorElement.textContent = message;
+    
+    // Dodaj komunikat do kontenera przycisku eksportu
+    document.getElementById('export-button-container').appendChild(errorElement);
+    
+    // Usuń komunikat po 3 sekundach
+    setTimeout(function() {
+      const errorToRemove = document.getElementById('export-error');
+      if (errorToRemove) errorToRemove.remove();
+    }, 3000);
+  }
+  
+  // Obsługa animacji podczas przekierowania do podglądu eksportu
+  document.addEventListener('htmx:beforeSend', function(evt) {
+    if (evt.detail.requestConfig.path.includes('/preview-export')) {
+      // Dodaj animację ładowania
+      const exportButton = evt.detail.elt;
+      const originalContent = exportButton.innerHTML;
+      
+      // Zmień zawartość przycisku na ikonę ładowania
+      exportButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Przygotowanie...';
+      exportButton.classList.add('opacity-70');
+      
+      // Przywróć oryginalną zawartość po zakończeniu lub błędzie
+      document.addEventListener('htmx:afterOnLoad', function() {
+        exportButton.innerHTML = originalContent;
+        exportButton.classList.remove('opacity-70');
+      }, { once: true });
+      
+      document.addEventListener('htmx:responseError', function() {
+        exportButton.innerHTML = originalContent;
+        exportButton.classList.remove('opacity-70');
+      }, { once: true });
+    }
+  });
+</script> 

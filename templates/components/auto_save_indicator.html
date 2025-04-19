@@ -1,0 +1,110 @@
+<div id="auto-save-indicator" class="text-sm mb-3 flex items-center">
+  <span id="save-status-icon" class="mr-2">
+    <i class="fas fa-check-circle text-green-500"></i>
+  </span>
+  <span id="save-status-text" class="text-gray-600">
+    Wszystkie zmiany zapisane
+  </span>
+  <span id="last-saved-time" class="ml-auto text-gray-500">
+    {% if last_saved %}
+      Ostatnio zapisano: {{ last_saved }}
+    {% endif %}
+  </span>
+</div>
+
+<script>
+  let autoSaveTimer;
+  let lastContent = "";
+  
+  function setupAutoSave() {
+    const contentElement = document.getElementById('summary-content');
+    if (!contentElement) return;
+    
+    // Nasłuchuj zmian w edytorze
+    contentElement.addEventListener('input', function() {
+      // Aktualizuj status zapisywania
+      updateSaveStatus('saving');
+      
+      // Resetuj timer przy każdej zmianie
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+      
+      // Ustaw nowy timer na automatyczne zapisywanie po 10 sekundach bezczynności
+      autoSaveTimer = setTimeout(function() {
+        const currentContent = contentElement.innerHTML;
+        
+        // Zapisuj tylko gdy zawartość się zmieniła
+        if (currentContent !== lastContent) {
+          // Wywołaj zdarzenie do zapisania zawartości
+          htmx.trigger(contentElement, 'autosave');
+          lastContent = currentContent;
+        }
+      }, 10000); // 10 sekund
+    });
+    
+    // Zapisz również przy opuszczeniu edytora
+    contentElement.addEventListener('blur', function() {
+      const currentContent = contentElement.innerHTML;
+      if (currentContent !== lastContent) {
+        htmx.trigger(contentElement, 'autosave');
+        lastContent = currentContent;
+      }
+    });
+    
+    // Inicjalizacja wartości początkowej
+    lastContent = contentElement.innerHTML;
+  }
+  
+  // Funkcja aktualizująca status zapisywania
+  function updateSaveStatus(status) {
+    const statusIcon = document.getElementById('save-status-icon');
+    const statusText = document.getElementById('save-status-text');
+    
+    if (status === 'saving') {
+      // Stan zapisywania
+      statusIcon.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500"></i>';
+      statusText.textContent = 'Zapisywanie zmian...';
+      statusText.className = 'text-blue-600';
+    } else if (status === 'saved') {
+      // Stan zapisane
+      statusIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+      statusText.textContent = 'Wszystkie zmiany zapisane';
+      statusText.className = 'text-gray-600';
+      
+      // Aktualizacja czasu ostatniego zapisu
+      const now = new Date();
+      const timeString = now.toLocaleTimeString();
+      document.getElementById('last-saved-time').textContent = 'Ostatnio zapisano: ' + timeString;
+    } else if (status === 'error') {
+      // Stan błędu
+      statusIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
+      statusText.textContent = 'Wystąpił błąd podczas zapisywania';
+      statusText.className = 'text-red-600';
+    }
+  }
+  
+  // Inicjalizacja przy załadowaniu komponentu
+  document.addEventListener('htmx:afterSwap', function() {
+    setupAutoSave();
+  });
+  
+  // Nasłuchiwanie odpowiedzi po zapisie
+  document.body.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.elt.id === 'summary-content' && event.detail.successful) {
+      updateSaveStatus('saved');
+    } else if (event.detail.elt.id === 'summary-content' && !event.detail.successful) {
+      updateSaveStatus('error');
+      
+      // Automatyczna ponowna próba za 30 sekund
+      setTimeout(function() {
+        const contentElement = document.getElementById('summary-content');
+        if (contentElement) {
+          htmx.trigger(contentElement, 'autosave');
+        }
+      }, 30000);
+      
+      // Zapisz do localStorage na wszelki wypadek
+      localStorage.setItem('summary_backup_' + window.location.pathname, 
+                          document.getElementById('summary-content').innerHTML);
+    }
+  });
+</script> 

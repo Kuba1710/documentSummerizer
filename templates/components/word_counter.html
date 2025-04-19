@@ -1,0 +1,38 @@
+<div class="absolute bottom-3 left-3 text-sm text-gray-500" id="word-counter">
+  <span id="word-count">0</span> słów, 
+  <span id="char-count">0</span> znaków
+</div>
+
+<script>
+  // Funkcja do liczenia słów i znaków w tekście
+  function updateWordCounter() {
+    const contentElement = document.getElementById('summary-content');
+    if (!contentElement) return;
+    
+    // Pobierz tekst bez tagów HTML
+    const textContent = contentElement.innerText || '';
+    
+    // Policz słowa (niezerowa liczba znaków oddzielona białymi znakami)
+    const wordCount = textContent.trim().split(/\s+/).filter(Boolean).length;
+    
+    // Policz znaki (włącznie ze spacjami)
+    const charCount = textContent.length;
+    
+    // Aktualizuj liczniki
+    document.getElementById('word-count').textContent = wordCount;
+    document.getElementById('char-count').textContent = charCount;
+  }
+  
+  // Inicjalizacja licznika przy ładowaniu
+  document.addEventListener('htmx:afterSwap', function() {
+    updateWordCounter();
+  });
+  
+  // Aktualizacja licznika przy zmianach zawartości
+  document.body.addEventListener('content-changed', function() {
+    updateWordCounter();
+  });
+  
+  // Natychmiastowa aktualizacja licznika po inicjalizacji komponentu
+  updateWordCounter();
+</script> 

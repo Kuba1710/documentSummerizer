@@ -1,0 +1,75 @@
+<div 
+  class="bg-white rounded-lg shadow-lg p-4 h-full flex flex-col" 
+  id="summary-editor-panel"
+>
+  {% if summary %}
+    <!-- Toolbar formatowania -->
+    <div id="formatting-toolbar-container" hx-get="/components/formatting-toolbar/{{ summary.id }}" hx-trigger="load"></div>
+    
+    <!-- Edytor tekstu -->
+    <div class="flex-grow mb-3 relative">
+      <div 
+        id="summary-content" 
+        contenteditable="true" 
+        class="border rounded p-3 h-full overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-300"
+        hx-trigger="keyup changed delay:500ms, blur"
+        hx-put="/api/summaries/{{ summary.id }}"
+        hx-include="this"
+        hx-target="#auto-save-indicator"
+        hx-swap="innerHTML"
+      >{{ summary.content|safe }}</div>
+      
+      <!-- Licznik słów/znaków -->
+      <div id="word-counter-container" hx-get="/components/word-counter" hx-trigger="load"></div>
+    </div>
+    
+    <!-- Dolny panel -->
+    <div class="mt-auto">
+      <!-- Wskaźnik auto-save -->
+      <div id="auto-save-indicator" class="text-sm text-gray-500 mb-3">
+        Zapisywanie automatyczne co 10 sekund
+      </div>
+      
+      <!-- Komponent oceny -->
+      <div id="feedback-component-container" hx-get="/components/feedback/{{ summary.id }}" hx-trigger="load"></div>
+      
+      <!-- Przycisk eksportu -->
+      <div class="text-right">
+        <a 
+          href="/summaries/{{ summary.id }}/preview-export"
+          hx-get="/summaries/{{ summary.id }}/preview-export"
+          hx-push-url="true"
+          class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded inline-block"
+        >
+          Eksportuj do PDF
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="flex-grow flex items-center justify-center">
+      <div class="text-center">
+        <div class="spinner mb-3">
+          <i class="fas fa-spinner fa-spin fa-2x text-blue-500"></i>
+        </div>
+        <p>Ładowanie podsumowania...</p>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener('htmx:afterSwap', function() {
+    // Załadowanie podkomponentów
+    htmx.trigger('#formatting-toolbar-container', 'load');
+    htmx.trigger('#word-counter-container', 'load');
+    htmx.trigger('#feedback-component-container', 'load');
+    
+    // Inicjalizacja edytora
+    const contentElement = document.getElementById('summary-content');
+    if (contentElement) {
+      contentElement.addEventListener('input', function() {
+        htmx.trigger('#word-counter-container', 'content-changed');
+      });
+    }
+  });
+</script> 

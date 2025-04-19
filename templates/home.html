@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}SciSummarize - AI-powered Scientific Document Summarization{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Transform Complex Research Into Clear Summaries</h1>
+        <p>SciSummarize uses AI to analyze and summarize scientific documents, helping you understand complex research in minutes, not hours.</p>
+        <div class="hero-buttons">
+            <a href="/upload" class="btn btn-primary">Upload Document</a>
+            <a href="/how-it-works" class="btn btn-secondary">Learn More</a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <img src="/static/images/hero-illustration.svg" alt="Document summarization illustration">
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="feature-card">
+        <div class="feature-icon">
+            <img src="/static/images/icons/fast.svg" alt="Speed icon">
+        </div>
+        <h3>Fast & Efficient</h3>
+        <p>Get comprehensive summaries in seconds, saving hours of reading time.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">
+            <img src="/static/images/icons/accurate.svg" alt="Accuracy icon">
+        </div>
+        <h3>High Accuracy</h3>
+        <p>Advanced AI ensures summaries capture all key information and insights.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">
+            <img src="/static/images/icons/customizable.svg" alt="Customizable icon">
+        </div>
+        <h3>Customizable</h3>
+        <p>Adjust summary length and focus to meet your specific needs.</p>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works">
+    <h2>How SciSummarize Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Upload</h3>
+            <p>Upload your scientific document in PDF, DOCX, or TXT format.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Process</h3>
+            <p>Our AI analyzes the document, identifying key information and insights.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Summarize</h3>
+            <p>Receive a clear, concise summary with all essential information highlighted.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta text-center p-4">
+    <h2>Ready to simplify your research?</h2>
+    <p>Try SciSummarize today and experience the difference.</p>
+    <a href="/register" class="btn btn-primary mt-4">Get Started for Free</a>
+</section>
+{% endblock %} 

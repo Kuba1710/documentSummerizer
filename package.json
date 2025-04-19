@@ -1,0 +1,20 @@
+{
+  "name": "documentsummerizer",
+  "version": "1.0.0",
+  "description": "![Project Status](https://img.shields.io/badge/status-MVP%20Development-blue)\r ![License](https://img.shields.io/badge/license-MIT-green)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kuba1710/documentSummerizer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kuba1710/documentSummerizer/issues"
+  },
+  "homepage": "https://github.com/Kuba1710/documentSummerizer#readme"
+}

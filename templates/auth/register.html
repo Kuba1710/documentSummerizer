@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Rejestracja - SciSummarize{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Utwórz konto w systemie
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Dołącz do społeczności SciSummarize i korzystaj z zaawansowanych funkcji podsumowywania
+      </p>
+    </div>
+    
+    <!-- Formularz rejestracji -->
+    <form class="mt-8 space-y-6" id="register-form">
+      <!-- Komunikat o błędzie rejestracji -->
+      <div id="register-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+        <p class="font-bold">Błąd rejestracji</p>
+        <p id="error-message">Nieprawidłowe dane rejestracji.</p>
+      </div>
+      
+      <!-- Pola formularza -->
+      <div class="rounded-md shadow-sm -space-y-px">
+        <div>
+          <label for="name" class="sr-only">Imię i nazwisko</label>
+          <input id="name" name="name" type="text" required 
+                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                 placeholder="Imię i nazwisko" />
+        </div>
+        <div>
+          <label for="email" class="sr-only">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required 
+                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                 placeholder="Adres email" />
+        </div>
+        <div>
+          <label for="password" class="sr-only">Hasło</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" required 
+                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                 placeholder="Hasło" />
+        </div>
+        <div>
+          <label for="password_confirm" class="sr-only">Potwierdź hasło</label>
+          <input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" required 
+                 class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                 placeholder="Potwierdź hasło" />
+        </div>
+      </div>
+      
+      <!-- Walidacja hasła -->
+      <div id="password-validation" class="text-sm text-gray-600 space-y-2 hidden">
+        <p class="font-medium">Hasło musi zawierać:</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div id="length-validation" class="flex items-center text-red-500">
+            <i class="fas fa-times-circle mr-2"></i>
+            <span>Minimum 8 znaków</span>
+          </div>
+          <div id="uppercase-validation" class="flex items-center text-red-500">
+            <i class="fas fa-times-circle mr-2"></i>
+            <span>Dużą literę</span>
+          </div>
+          <div id="lowercase-validation" class="flex items-center text-red-500">
+            <i class="fas fa-times-circle mr-2"></i>
+            <span>Małą literę</span>
+          </div>
+          <div id="number-validation" class="flex items-center text-red-500">
+            <i class="fas fa-times-circle mr-2"></i>
+            <span>Cyfrę</span>
+          </div>
+          <div id="match-validation" class="flex items-center text-red-500">
+            <i class="fas fa-times-circle mr-2"></i>
+            <span>Hasła muszą się zgadzać</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button type="submit" 
+                class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <i class="fas fa-user-plus"></i>
+          </span>
+          Zarejestruj się
+        </button>
+      </div>
+      
+      <div class="text-center">
+        <p class="mt-2 text-sm text-gray-600">
+          Masz już konto?
+          <a href="/auth/login" class="font-medium text-blue-600 hover:text-blue-500">
+            Zaloguj się
+          </a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import api from '/static/js/api.js';
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('register-form');
+    const errorContainer = document.getElementById('register-error');
+    const errorMessage = document.getElementById('error-message');
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirm');
+    const validationArea = document.getElementById('password-validation');
+    
+    // Walidacja hasła
+    const validations = {
+      length: { element: document.getElementById('length-validation'), regex: /.{8,}/ },
+      uppercase: { element: document.getElementById('uppercase-validation'), regex: /[A-Z]/ },
+      lowercase: { element: document.getElementById('lowercase-validation'), regex: /[a-z]/ },
+      number: { element: document.getElementById('number-validation'), regex: /[0-9]/ },
+      match: { element: document.getElementById('match-validation'), check: () => passwordInput.value === confirmInput.value }
+    };
+    
+    // Funkcja aktualizująca status walidacji
+    function updateValidation() {
+      validationArea.classList.remove('hidden');
+      
+      let allValid = true;
+      
+      // Sprawdź wszystkie reguły walidacji
+      for (const [key, validation] of Object.entries(validations)) {
+        let isValid = false;
+        
+        if (key === 'match') {
+          isValid = validation.check();
+        } else {
+          isValid = validation.regex.test(passwordInput.value);
+        }
+        
+        const element = validation.element;
+        
+        if (isValid) {
+          element.classList.remove('text-red-500');
+          element.classList.add('text-green-500');
+          element.querySelector('i').classList.remove('fa-times-circle');
+          element.querySelector('i').classList.add('fa-check-circle');
+        } else {
+          element.classList.remove('text-green-500');
+          element.classList.add('text-red-500');
+          element.querySelector('i').classList.remove('fa-check-circle');
+          element.querySelector('i').classList.add('fa-times-circle');
+          allValid = false;
+        }
+      }
+      
+      return allValid;
+    }
+    
+    // Aktualizuj walidację przy wprowadzaniu hasła
+    passwordInput.addEventListener('input', updateValidation);
+    confirmInput.addEventListener('input', updateValidation);
+    
+    // Obsługa formularza rejestracji
+    registerForm.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      // Ukryj błędy z poprzednich prób
+      errorContainer.classList.add('hidden');
+      
+      // Sprawdź walidację hasła
+      if (!updateValidation()) {
+        errorMessage.textContent = 'Hasło nie spełnia wymagań bezpieczeństwa.';
+        errorContainer.classList.remove('hidden');
+        return;
+      }
+      
+      // Pobierz dane z formularza
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = passwordInput.value;
+      
+      // Zmień wygląd przycisku na ładowanie
+      const submitButton = registerForm.querySelector('button[type="submit"]');
+      const originalButtonContent = submitButton.innerHTML;
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Rejestracja...';
+      submitButton.disabled = true;
+      
+      try {
+        // Wywołaj metodę rejestracji z API
+        await api.auth.register(name, email, password);
+        
+        // Automatyczne logowanie po rejestracji
+        await api.auth.login(email, password);
+        
+        // Przekierowanie na stronę główną
+        window.location.href = '/documents';
+      } catch (error) {
+        // Wyświetl błąd rejestracji
+        errorMessage.textContent = error.message || 'Błąd podczas rejestracji. Spróbuj ponownie.';
+        errorContainer.classList.remove('hidden');
+        
+        // Przywróć oryginalny wygląd przycisku
+        submitButton.innerHTML = originalButtonContent;
+        submitButton.disabled = false;
+      }
+    });
+  });
+</script>
+{% endblock %} 
