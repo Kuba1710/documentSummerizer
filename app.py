@@ -26,4 +26,10 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True) 
+    # Use environment variables or safer defaults for host binding
+    # In production, this should be configured through environment variables
+    host = os.getenv("APP_HOST", "127.0.0.1")  # Bind to localhost by default
+    port = int(os.getenv("APP_PORT", "8000"))
+    reload_enabled = os.getenv("DEV_RELOAD", "true").lower() == "true"
+    
+    uvicorn.run("app:app", host=host, port=port, reload=reload_enabled) 

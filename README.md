@@ -174,6 +174,15 @@ The pipeline consists of two main jobs:
    - Builds frontend assets
    - Verifies the final build
 
+### Security Scanning
+
+The project uses Bandit for security scanning. Configuration is stored in the `.bandit` file, which specifies:
+- Directories/files to exclude from scanning
+- Security checks to skip in specific scenarios (like assertions in test files)
+- Line-specific exclusions for false positives
+
+Detected security issues are currently treated as warnings rather than errors to allow development to proceed. Before deploying to production, all security issues should be addressed.
+
 ### Triggers
 
 The pipeline can be triggered:

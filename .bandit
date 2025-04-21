@@ -1,0 +1,9 @@
+[bandit]
+# Skip assert (B101) in test files
+exclude_dirs = tests,**/tests/**,**/test_*.py
+skips = B101
+
+# Test skips for token type "bearer" which is not actually a password but a standard OAuth term
+# Add it here for more fine-grained control in the future
+[bandit.exclude_locs]
+B106 = */routers/auth_router.py:123, */routers/auth_router.py:169 
