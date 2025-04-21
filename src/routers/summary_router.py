@@ -89,6 +89,9 @@ async def upload_document(
                    f"focusAreas={focusAreas}, includeKeypoints={includeKeypoints}, "
                    f"includeTables={includeTables}, includeReferences={includeReferences}")
         
+        # Dodaj informacje diagnostyczne dla testów E2E
+        logger.info(f"TEST_EVENT: document_uploaded, document_id={document_id}, filename={file.filename}")
+        
         # Return the document ID
         return {
             "success": True,
@@ -142,6 +145,10 @@ async def generate_summary(
         
         # Generate summary without database connection
         summary = await summary_service.create_summary(document_id)
+        
+        # Dodaj informacje diagnostyczne dla testów E2E
+        logger.info(f"TEST_EVENT: summary_generated, document_id={document_id}, summary_id={summary.get('id', 'unknown')}")
+        
         return summary
         
     except HTTPException as ex:
@@ -198,6 +205,9 @@ async def get_summary(
         with open(summary_file, "r") as f:
             summary = json.load(f)
             logger.info(f"Summary loaded successfully for document: {document_id}")
+            
+        # Dodaj informacje diagnostyczne dla testów E2E
+        logger.info(f"TEST_EVENT: summary_retrieved, document_id={document_id}, summary_id={summary.get('id', 'unknown')}")
             
         return summary
         
@@ -378,6 +388,9 @@ async def download_summary_pdf(
             safe_name = "".join(c if c.isalnum() else "_" for c in document_name)
             filename = f"Summary_{safe_name}_{document_id}.pdf"
             
+            # Dodaj informacje diagnostyczne dla testów E2E
+            logger.info(f"TEST_EVENT: summary_pdf_exported, document_id={document_id}, filename={filename}")
+            
             # Return streaming response
             return StreamingResponse(
                 buffer, 
@@ -484,8 +497,8 @@ async def download_summary_pdf(
         raise
         
     except Exception as e:
-        logger.error(f"Error in download_summary_pdf: {str(e)}")
+        logger.error(f"Error in PDF export: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred"
+            detail="An unexpected error occurred while exporting summary to PDF"
         ) 

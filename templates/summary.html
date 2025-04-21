@@ -3,22 +3,22 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+<div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10" data-test-id="summary-page">
     <h1 class="text-2xl font-bold mb-2">Document Summary</h1>
     <h2 class="text-lg text-gray-600 mb-6">{{ document_name }}</h2>
     
     <!-- Summary Content -->
-    <div class="border rounded-lg p-6 bg-gray-50 mb-6">
+    <div class="border rounded-lg p-6 bg-gray-50 mb-6" data-test-id="summary-container">
         <h3 class="text-xl font-semibold mb-4">Generated Summary</h3>
-        <div class="prose max-w-none">
+        <div class="prose max-w-none" data-test-id="summary-content">
             <p>{{ summary.content }}</p>
         </div>
     </div>
     
     <!-- Actions -->
-    <div class="flex flex-wrap justify-between gap-4">
+    <div class="flex flex-wrap justify-between gap-4" data-test-id="summary-actions">
         <div>
-            <a href="/documents/{{ document_id }}" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md">
+            <a href="/documents/{{ document_id }}" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md" data-test-id="back-to-document-link">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -27,14 +27,14 @@
         </div>
         
         <div class="flex gap-2">
-            <button id="copy-button" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+            <button id="copy-button" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md" data-test-id="copy-summary-button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                 </svg>
                 Copy Summary
             </button>
             
-            <button id="download-button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">
+            <button id="download-button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md" data-test-id="export-summary-pdf-button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
@@ -44,19 +44,19 @@
     </div>
     
     <!-- Feedback Section -->
-    <div class="mt-8 border-t pt-6">
+    <div class="mt-8 border-t pt-6" data-test-id="feedback-section">
         <h3 class="text-xl font-semibold mb-4">Provide Feedback</h3>
         <p class="text-gray-600 mb-4">Was this summary helpful? Your feedback helps us improve our summarization algorithm.</p>
         
         <div class="flex gap-4">
-            <button id="thumbs-up" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-green-100 text-gray-800 rounded-md border border-gray-300">
+            <button id="thumbs-up" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-green-100 text-gray-800 rounded-md border border-gray-300" data-test-id="feedback-helpful-button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                 </svg>
                 Helpful
             </button>
             
-            <button id="thumbs-down" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-red-100 text-gray-800 rounded-md border border-gray-300">
+            <button id="thumbs-down" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-red-100 text-gray-800 rounded-md border border-gray-300" data-test-id="feedback-not-helpful-button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.737 3h4.017c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
                 </svg>
@@ -64,7 +64,7 @@
             </button>
         </div>
         
-        <div id="feedback-sent" class="hidden mt-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
+        <div id="feedback-sent" class="hidden mt-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert" data-test-id="feedback-sent-confirmation">
             <p>Thank you for your feedback!</p>
         </div>
     </div>

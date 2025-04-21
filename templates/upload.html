@@ -28,10 +28,10 @@ label#browseButton:hover {
 <div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
     <h1 class="text-2xl font-bold mb-6 text-center">Upload Document for Summarization</h1>
     
-    <form id="upload-form" action="/upload-document" method="post" enctype="multipart/form-data" class="space-y-6">
-        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center" id="drop-area">
-            <input type="file" name="file" id="file-input" class="hidden" accept=".pdf" required>
-            <label for="file-input" class="block cursor-pointer">
+    <form id="upload-form" action="/upload-document" method="post" enctype="multipart/form-data" class="space-y-6" data-test-id="document-upload-form">
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center" id="drop-area" data-test-id="document-drop-area">
+            <input type="file" name="file" id="file-input" class="hidden" accept=".pdf" required data-test-id="pdf-file-input">
+            <label for="file-input" class="block cursor-pointer" data-test-id="pdf-file-label">
                 <div class="flex flex-col items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -40,16 +40,16 @@ label#browseButton:hover {
                     <p class="text-xs text-gray-500 mt-1">Maximum size: 10 MB</p>
                 </div>
             </label>
-            <div id="file-info" class="mt-4 hidden">
-                <p class="text-sm font-medium">Selected file: <span id="file-name" class="font-normal"></span></p>
-                <p class="text-xs text-gray-500">Size: <span id="file-size" class="font-normal"></span></p>
+            <div id="file-info" class="mt-4 hidden" data-test-id="file-info">
+                <p class="text-sm font-medium">Selected file: <span id="file-name" class="font-normal" data-test-id="file-name"></span></p>
+                <p class="text-xs text-gray-500">Size: <span id="file-size" class="font-normal" data-test-id="file-size"></span></p>
             </div>
         </div>
         
         <div class="bg-gray-50 p-4 rounded-lg">
             <h3 class="text-lg font-medium mb-3">Summary Options</h3>
             
-            <div class="mb-4">
+            <div class="mb-4" data-test-id="summary-length-options">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Summary Length</label>
                 <div class="flex flex-wrap gap-3">
                     <label class="inline-flex items-center">
@@ -75,7 +75,7 @@ label#browseButton:hover {
                 </div>
             </div>
             
-            <div class="mb-4">
+            <div class="mb-4" data-test-id="summary-content-options">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Include in Summary</label>
                 <div class="space-y-2">
                     <label class="inline-flex items-center">
@@ -95,30 +95,30 @@ label#browseButton:hover {
         </div>
         
         <div class="text-center">
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" data-test-id="upload-submit-button">
                 Upload and Generate Summary
             </button>
         </div>
     </form>
     
-    <div id="upload-progress" class="mt-6 hidden">
+    <div id="upload-progress" class="mt-6 hidden" data-test-id="upload-progress">
         <div class="w-full bg-gray-200 rounded-full h-2.5">
-            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%" data-test-id="upload-progress-bar"></div>
         </div>
-        <p class="text-sm text-gray-600 mt-2">Processing: <span id="progress-status">Uploading...</span></p>
+        <p class="text-sm text-gray-600 mt-2">Processing: <span id="progress-status" data-test-id="progress-status">Uploading...</span></p>
     </div>
     
-    <div id="upload-success" class="mt-6 hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
+    <div id="upload-success" class="mt-6 hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert" data-test-id="upload-success">
         <p>Document uploaded successfully!</p>
-        <p id="document-id" class="hidden"></p>
-        <p class="mt-2">Generating summary... <span id="summary-status">Please wait...</span></p>
+        <p id="document-id" class="hidden" data-test-id="document-id"></p>
+        <p class="mt-2">Generating summary... <span id="summary-status" data-test-id="summary-status">Please wait...</span></p>
         <div id="summary-progress" class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-            <div id="summary-progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+            <div id="summary-progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%" data-test-id="summary-progress-bar"></div>
         </div>
     </div>
     
-    <div id="upload-error" class="mt-6 hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
-        <p id="error-message">An error occurred during upload.</p>
+    <div id="upload-error" class="mt-6 hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert" data-test-id="upload-error">
+        <p id="error-message" data-test-id="error-message">An error occurred during upload.</p>
     </div>
 </div>
 
