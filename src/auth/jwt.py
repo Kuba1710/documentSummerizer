@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional
 import logging
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -135,17 +135,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     except jwt.JWTError:
         raise credentials_exception
 
-async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme_optional)) -> Optional[dict]:
+async def get_current_user_optional(request: Request) -> Optional[dict]:
     """Get the current user if authenticated, or None if not
     
     This dependency can be used for routes where authentication is optional
     
     Args:
-        token: JWT token from Authorization header (optional)
+        request: The FastAPI request object
         
     Returns:
         User data from token or None if not authenticated
     """
+    # Try to get token from cookies
+    token = request.cookies.get("session_token")
+        
     if not token:
         return None
     
@@ -161,8 +164,9 @@ async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme
         
         # Return user data
         return {"id": user_id}
-    except:
+    except Exception as e:
         # Return None if token is invalid or missing
+        logger.debug(f"Failed to decode token: {str(e)}")
         return None
 
 async def get_current_user_db(

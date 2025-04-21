@@ -1,0 +1,23 @@
+{% if request.state.authenticated %}
+    <!-- Nagłówek dla zalogowanego użytkownika -->
+    <div class="flex items-center justify-between p-4 bg-blue-600 text-white">
+        <div class="text-2xl font-bold">
+            <a href="/">SciSummarize</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span>Witaj, {{ request.state.user.login }}</span>
+            <a href="/auth/logout" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded">Wyloguj</a>
+        </div>
+    </div>
+{% else %}
+    <!-- Nagłówek dla niezalogowanego użytkownika -->
+    <div class="flex items-center justify-between p-4 bg-blue-600 text-white">
+        <div class="text-2xl font-bold">
+            <a href="/">SciSummarize</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="/auth/login" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded">Zaloguj</a>
+            <a href="/auth/register" class="px-4 py-2 bg-white text-blue-600 hover:bg-gray-100 rounded">Zarejestruj</a>
+        </div>
+    </div>
+{% endif %} 

@@ -62,8 +62,9 @@ async def upload_document_page(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """Render document upload page"""
-    # Redirect to login if not authenticated
-    if not current_user:
+    # Check both dependency and request state
+    if not current_user and not request.state.authenticated:
+        print(f"No authenticated user, redirecting to login. Request state: {request.state.authenticated}, Current user: {current_user}")
         return templates.TemplateResponse(
             "auth/login.html", 
             {
@@ -73,12 +74,15 @@ async def upload_document_page(
             }
         )
     
+    # Use either current_user from dependency or from request state
+    user_data = current_user if current_user else request.state.user
+    
     return templates.TemplateResponse(
         "upload.html", 
         {
             "request": request, 
             "title": "Upload Document - SciSummarize",
-            "user": current_user
+            "user": user_data
         }
     )
 
@@ -131,8 +135,8 @@ async def settings_page(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """Render settings page"""
-    # Redirect to login if not authenticated
-    if not current_user:
+    # Check both dependency and request state
+    if not current_user and not request.state.authenticated:
         return templates.TemplateResponse(
             "auth/login.html", 
             {
@@ -142,12 +146,15 @@ async def settings_page(
             }
         )
     
+    # Use either current_user from dependency or from request state
+    user_data = current_user if current_user else request.state.user
+    
     return templates.TemplateResponse(
         "settings.html", 
         {
             "request": request, 
             "title": "Settings - SciSummarize",
-            "user": current_user
+            "user": user_data
         }
     )
 

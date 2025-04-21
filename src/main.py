@@ -1,14 +1,21 @@
+import json
 import logging
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 import time
+from contextlib import asynccontextmanager
+from typing import Union
+
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from db.database import init_db
+from routers import summary_router, page_router
+from routers.auth import router as auth_router
+from auth.middleware import auth_middleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
-
-from db.database import init_db
-from routers import summary_router, auth_router, page_router
 
 # Konfiguracja loggera
 logging.basicConfig(
@@ -77,9 +84,12 @@ async def log_requests(request: Request, call_next):
     
     return response
 
+# Dodanie middleware autentykacji
+app.middleware("http")(auth_middleware)
+
 # Dodawanie routerów
 app.include_router(summary_router.router)
-app.include_router(auth_router.router)
+app.include_router(auth_router)
 app.include_router(page_router.router)
 
 # Health check endpoint

@@ -16,43 +16,8 @@
 </head>
 <body data-page="{{ page_name|default('home') }}">
   <header>
-    <nav class="navbar">
-      <div class="navbar-logo">
-        <a href="/">
-          <!-- Fallback for logo -->
-          <span style="font-weight: bold; font-size: 1.5rem; color: #0066cc;">SciSummarize</span>
-        </a>
-      </div>
-      
-      <div class="navbar-search">
-        <form action="/search" method="get" id="search-form">
-          <input type="text" name="q" id="search-input" placeholder="Search documents...">
-          <button type="submit" id="search-button">
-            Search
-          </button>
-        </form>
-      </div>
-      
-      <div class="navbar-menu">
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/documents/upload">Upload</a></li>
-          {% if user %}
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle">{{ user.username }}</a>
-              <ul class="dropdown-menu">
-                <li><a href="/profile">Profile</a></li>
-                <li><a href="/settings">Settings</a></li>
-                <li><a href="#" id="logout-link">Logout</a></li>
-              </ul>
-            </li>
-          {% else %}
-            <li><a href="/login">Login</a></li>
-            <li><a href="/register">Register</a></li>
-          {% endif %}
-        </ul>
-      </div>
-    </nav>
+    <!-- Dodanie komponentu nagłówka z obsługą autentykacji -->
+    {% include "components/header.html" %}
   </header>
 
   <main>
