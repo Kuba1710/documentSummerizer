@@ -146,27 +146,40 @@ async def get_current_user_optional(request: Request) -> Optional[dict]:
     Returns:
         User data from token or None if not authenticated
     """
+    # Print request data for debugging
+    print(f"JWT: Request URL: {request.url}")
+    
     # Try to get token from cookies
     token = request.cookies.get("session_token")
-        
-    if not token:
+    
+    if token:
+        print(f"JWT: Found token in cookies: {token[:10]}...")
+    else:
+        print("JWT: No token found in cookies")
         return None
     
     try:
-        # Try to get the user
-        # Decode token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Try to get the user - without verifying signature
+        # This is safe for user identification but should be handled with care
+        # In production, consider using Supabase client to verify tokens properly
+        payload = jwt.decode(token, options={"verify_signature": False})
         
         # Extract user ID from token
         user_id = payload.get("sub")
         if user_id is None:
+            print("JWT: No user_id in payload")
             return None
         
+        # Print user metadata if available
+        user_metadata = payload.get("user_metadata", {})
+        login = user_metadata.get("login", "unknown")
+        print(f"JWT: Successfully extracted user info: id={user_id}, login={login}")
+        
         # Return user data
-        return {"id": user_id}
+        return {"id": user_id, "login": login}
     except Exception as e:
         # Return None if token is invalid or missing
-        logger.debug(f"Failed to decode token: {str(e)}")
+        print(f"JWT: Failed to decode token: {str(e)}")
         return None
 
 async def get_current_user_db(

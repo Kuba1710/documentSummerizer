@@ -29,15 +29,30 @@ async def login(
         login_data = LoginSchema(login=login, password=password)
         result = await auth_service.login(login_data.login, login_data.password)
         
+        # Add more debugging about the token
+        token = result["session"]["access_token"]
+        print(f"Login successful for user: {login}")
+        print(f"Setting session token: {token[:20]}... (truncated)")
+        
+        # Try to inspect token contents without verification
+        try:
+            import jwt
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            print(f"Token contains user_id: {decoded.get('sub')}")
+            print(f"Token contains user_metadata: {decoded.get('user_metadata', {})}")
+        except Exception as e:
+            print(f"Could not decode token: {str(e)}")
+        
         # Przekierowanie z ciasteczkiem sesji
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
         response.set_cookie(
             key="session_token",
-            value=result["session"]["access_token"],
+            value=token,
             httponly=True,
             max_age=3600,  # 1 godzina
-            secure=True,
-            samesite="lax"
+            secure=False,  # Set to False for local development
+            samesite="lax",
+            path="/"  # Make sure cookie is sent for all paths
         )
         return response
     

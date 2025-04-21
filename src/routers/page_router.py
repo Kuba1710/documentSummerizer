@@ -62,9 +62,40 @@ async def upload_document_page(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """Render document upload page"""
-    # Check both dependency and request state
-    if not current_user and not request.state.authenticated:
-        print(f"No authenticated user, redirecting to login. Request state: {request.state.authenticated}, Current user: {current_user}")
+    # Enhanced debug print
+    print(f"Upload page requested. Authentication state:")
+    print(f"- URL: {request.url}")
+    print(f"- current_user from dependency: {current_user}")
+    print(f"- request.state.authenticated: {request.state.authenticated}")
+    print(f"- request.state.user: {request.state.user}")
+    print(f"- cookies: {list(request.cookies.keys())}")
+    
+    # Logic for allowing access - check both current_user and authenticated state
+    authenticated = current_user is not None or request.state.authenticated
+    
+    if authenticated:
+        # Print the authentication source
+        if current_user:
+            print(f"User authenticated via dependency: {current_user}")
+        if request.state.authenticated:
+            print(f"User authenticated via middleware: {request.state.user}")
+            
+        # Get user info from either source
+        user_data = current_user if current_user else request.state.user
+        
+        # Log the user data that will be used
+        print(f"Rendering upload page for user: {user_data}")
+        
+        return templates.TemplateResponse(
+            "upload.html", 
+            {
+                "request": request, 
+                "title": "Upload Document - SciSummarize",
+                "user": user_data
+            }
+        )
+    else:
+        print("No authentication found - redirecting to login")
         return templates.TemplateResponse(
             "auth/login.html", 
             {
@@ -73,18 +104,6 @@ async def upload_document_page(
                 "message": "Please login to upload documents"
             }
         )
-    
-    # Use either current_user from dependency or from request state
-    user_data = current_user if current_user else request.state.user
-    
-    return templates.TemplateResponse(
-        "upload.html", 
-        {
-            "request": request, 
-            "title": "Upload Document - SciSummarize",
-            "user": user_data
-        }
-    )
 
 
 @router.get("/documents/{document_id}", include_in_schema=False)
