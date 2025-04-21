@@ -11,6 +11,7 @@ pydantic==1.10.7
 
 # PDF processing
 pymupdf==1.22.3
+reportlab==3.6.12  # For PDF generation
 
 # Authentication
 python-jose==3.3.0

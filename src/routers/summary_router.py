@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
+from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
 from typing import Any, List, Optional
 from uuid import UUID
@@ -7,6 +8,8 @@ import os
 import shutil
 from pathlib import Path
 import json
+import io
+from datetime import datetime
 
 from models.summary import SummaryResponse
 from services.summary_service import SummaryService
@@ -206,4 +209,283 @@ async def get_summary(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while retrieving the summary"
+        )
+
+
+@router.get(
+    "/{document_id}/summaries/pdf", 
+    summary="Download summary as PDF",
+    description="Generates and downloads a PDF version of the document summary."
+)
+async def download_summary_pdf(
+    document_id: UUID,
+    request: Request
+) -> Any:
+    """Generate and download a PDF of the document summary
+    
+    Args:
+        document_id: UUID of the document
+        request: FastAPI request object for cookie extraction
+        
+    Returns:
+        PDF file as StreamingResponse
+        
+    Raises:
+        HTTPException: Various error status codes depending on the specific error
+    """
+    # Authenticate user from cookie before proceeding
+    current_user = await get_current_user_from_cookie(request)
+    
+    try:
+        # Check if summary exists
+        summary_file = Path("summaries") / f"{document_id}.json"
+        logger.info(f"Looking for summary file for PDF generation: {summary_file}")
+        
+        if not summary_file.exists():
+            logger.warning(f"Summary file not found: {summary_file}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Summary not found"
+            )
+            
+        # Read summary from file
+        with open(summary_file, "r") as f:
+            summary = json.load(f)
+            
+        # Get document name if available
+        file_path = Path("uploads") / f"{document_id}.pdf"
+        document_name = "Summary"
+        
+        if file_path.exists():
+            try:
+                import fitz  # PyMuPDF
+                doc = fitz.open(file_path)
+                if doc.metadata and doc.metadata.get("title"):
+                    document_name = doc.metadata.get("title")
+                else:
+                    document_name = file_path.name
+                doc.close()
+            except Exception as e:
+                logger.error(f"Error getting document metadata: {str(e)}")
+        
+        # Generate PDF using a very basic approach
+        try:
+            # Create a simple PDF using PyMuPDF (already a dependency)
+            import fitz
+            
+            # Create a new PDF document
+            pdf_document = fitz.open()
+            
+            # Add a new page (letter size)
+            page = pdf_document.new_page(width=612, height=792)
+            
+            # Get content
+            summary_text = summary["content"]
+            generation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Set up fonts and positioning
+            title_font_size = 16
+            date_font_size = 11
+            body_font_size = 11
+            footer_font_size = 9
+            margin_top = 72
+            margin_left = 72
+            margin_right = 72
+            line_height = 1.5
+            
+            # Current y position for text
+            y_position = margin_top
+            
+            # Insert title (centered)
+            title_text = f"Summary of {document_name}"
+            text_width = fitz.get_text_length(title_text, fontname="helv", fontsize=title_font_size)
+            x_position = (page.rect.width - text_width) / 2
+            page.insert_text((x_position, y_position), title_text, fontname="helv", fontsize=title_font_size)
+            y_position += title_font_size * line_height * 1.5
+            
+            # Insert date (centered, italic)
+            date_text = f"Generated on: {generation_date}"
+            text_width = fitz.get_text_length(date_text, fontname="helv-i", fontsize=date_font_size)
+            x_position = (page.rect.width - text_width) / 2
+            page.insert_text((x_position, y_position), date_text, fontname="helv-i", fontsize=date_font_size)
+            y_position += date_font_size * line_height * 2  # Extra space after date
+            
+            # Break summary into paragraphs and insert each paragraph
+            paragraphs = summary_text.split("\n\n")
+            for paragraph in paragraphs:
+                if not paragraph.strip():
+                    continue
+                    
+                # Wrap the text to fit page width
+                max_width = page.rect.width - margin_left - margin_right
+                lines = []
+                
+                words = paragraph.split()
+                current_line = []
+                current_width = 0
+                
+                for word in words:
+                    word_width = fitz.get_text_length(word, fontname="helv", fontsize=body_font_size)
+                    space_width = fitz.get_text_length(" ", fontname="helv", fontsize=body_font_size)
+                    
+                    # Check if adding this word would exceed the line width
+                    if current_width + word_width + (space_width if current_line else 0) > max_width:
+                        if current_line:  # Don't add empty lines
+                            lines.append(" ".join(current_line))
+                        current_line = [word]
+                        current_width = word_width
+                    else:
+                        if current_line:  # Add space before word (except for first word)
+                            current_width += space_width
+                        current_line.append(word)
+                        current_width += word_width
+                
+                # Add the last line if any
+                if current_line:
+                    lines.append(" ".join(current_line))
+                
+                # Insert each line of the paragraph
+                for line in lines:
+                    if y_position > page.rect.height - margin_top:  # If we're reaching the page bottom
+                        # Add a new page
+                        page = pdf_document.new_page(width=612, height=792)
+                        y_position = margin_top
+                    
+                    page.insert_text((margin_left, y_position), line, fontname="helv", fontsize=body_font_size)
+                    y_position += body_font_size * line_height
+                
+                # Add extra space after paragraph
+                y_position += body_font_size * 0.5
+            
+            # Add footer (centered)
+            footer_text = "Generated by SciSummarize"
+            text_width = fitz.get_text_length(footer_text, fontname="helv-i", fontsize=footer_font_size)
+            x_position = (page.rect.width - text_width) / 2
+            footer_y = page.rect.height - margin_top / 2
+            page.insert_text((x_position, footer_y), footer_text, fontname="helv-i", fontsize=footer_font_size)
+            
+            # Create a BytesIO buffer to hold the PDF
+            buffer = io.BytesIO()
+            
+            # Save the PDF to the buffer
+            pdf_document.save(buffer)
+            pdf_document.close()
+            
+            # Reset buffer position
+            buffer.seek(0)
+            
+            # Create filename for download
+            safe_name = "".join(c if c.isalnum() else "_" for c in document_name)
+            filename = f"Summary_{safe_name}_{document_id}.pdf"
+            
+            # Return streaming response
+            return StreamingResponse(
+                buffer, 
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+            
+        except Exception as e:
+            logger.error(f"Error generating PDF: {str(e)}")
+            
+            # Fallback to HTML if PDF generation fails
+            logger.info("Falling back to HTML generation")
+            
+            # Create a buffer for the HTML
+            buffer = io.StringIO()
+            
+            # Generate HTML content
+            generation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            summary_text = summary["content"]
+            
+            # Split into paragraphs
+            paragraphs = summary_text.split("\n\n")
+            paragraphs_html = ""
+            for paragraph in paragraphs:
+                if paragraph.strip():
+                    paragraphs_html += f"<p>{paragraph.strip()}</p>\n"
+            
+            # Create HTML document
+            html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary of {document_name}</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        h1 {{
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }}
+        .date {{
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }}
+        p {{
+            margin-bottom: 16px;
+            text-align: justify;
+        }}
+        .footer {{
+            text-align: center;
+            margin-top: 40px;
+            font-style: italic;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }}
+        @media print {{
+            body {{
+                font-size: 12pt;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <h1>Summary of {document_name}</h1>
+    <div class="date">Generated on: {generation_date}</div>
+    
+    <div class="content">
+        {paragraphs_html}
+    </div>
+    
+    <div class="footer">
+        Generated by SciSummarize
+    </div>
+</body>
+</html>"""
+            
+            # Write to buffer
+            buffer.write(html_content)
+            buffer.seek(0)
+            
+            # Create filename for download
+            safe_name = "".join(c if c.isalnum() else "_" for c in document_name)
+            filename = f"Summary_{safe_name}_{document_id}.html"
+            
+            # Return streaming response with HTML instead
+            return StreamingResponse(
+                buffer, 
+                media_type="text/html",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+            
+    except HTTPException:
+        raise
+        
+    except Exception as e:
+        logger.error(f"Error in download_summary_pdf: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
         ) 
