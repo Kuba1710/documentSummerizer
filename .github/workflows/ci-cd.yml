@@ -1,0 +1,102 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Enables manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+          
+      - name: Security scan with Bandit
+        run: |
+          pip install bandit
+          bandit -r . -x tests/
+          
+      - name: Run unit and integration tests
+        run: |
+          pytest --cov=./ --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          
+      - name: Run E2E tests with Playwright
+        run: |
+          pip install playwright pytest-playwright
+          # Install only Chromium as per guidelines
+          playwright install chromium
+          # Run E2E tests with traces for debugging failures
+          pytest tests/e2e/ --browser chromium --tracing on
+          # Store any artifacts from tests
+        env:
+          # Pass test mode flag for E2E tests
+          TEST_MODE: true
+        
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Build production assets
+        run: |
+          # Install Node.js for frontend assets
+          curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          npm install
+          npm run build
+          
+      - name: Test production build
+        run: |
+          # Run a simple check to verify the build
+          python -c "import app; print('Build successful')" 

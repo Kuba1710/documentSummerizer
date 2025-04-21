@@ -11,6 +11,7 @@
 - [Project Scope](#project-scope)
 - [Project Status](#project-status)
 - [License](#license)
+- [CI/CD Setup](#ci-cd-setup)
 
 ## Project Description
 
@@ -152,6 +153,46 @@ Currently in MVP development phase. The core functionality is being implemented 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## CI/CD Setup
+
+This project uses GitHub Actions for continuous integration and deployment. The workflow automatically runs tests and verifies the production build.
+
+### Workflow Details
+
+The pipeline consists of two main jobs:
+
+1. **Test**: Runs security scans, unit tests, integration tests, and E2E tests
+   - Uses PostgreSQL service container for database tests
+   - Runs Bandit for security scanning
+   - Executes Pytest for unit and integration tests
+   - Runs Playwright for E2E testing (Chromium only)
+   - Uploads test artifacts for debugging
+
+2. **Build**: Creates and verifies the production build
+   - Installs dependencies
+   - Builds frontend assets
+   - Verifies the final build
+
+### Triggers
+
+The pipeline can be triggered:
+- Automatically when pushing to the main/master branch
+- Automatically when creating a pull request to main/master
+- Manually through the GitHub Actions interface (workflow_dispatch)
+
+### Running Manually
+
+To run the workflow manually:
+1. Go to the Actions tab in your GitHub repository
+2. Select "CI/CD Pipeline" from the workflows list
+3. Click "Run workflow"
+4. Select the branch to run on
+5. Click "Run workflow"
+
+### Extending the Pipeline
+
+For additional stages like deployment, the workflow can be extended by adding new jobs that depend on the successful completion of the build job.
 
 ---
 
