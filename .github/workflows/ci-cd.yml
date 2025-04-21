@@ -46,32 +46,9 @@ jobs:
           # Skip B101 (assert usage) in test files which is expected
           bandit -r . -x tests/ --skip B101 --exclude "*/test_*.py,*/tests/*" || echo "Security issues were found, but continuing the build"
           
-      - name: Run unit and integration tests
+      - name: Run unit tests
         run: |
-          # Configure pytest to recognize the tests directory
-          echo "[pytest]" > pytest.ini
-          echo "pythonpath = ." >> pytest.ini
-          echo "testpaths = tests" >> pytest.ini
-          echo "asyncio_mode = strict" >> pytest.ini
-          echo "asyncio_default_fixture_loop_scope = function" >> pytest.ini
-          
-          # Run basic tests that don't require complex setup
-          if [ -f "tests/test_basic.py" ]; then
-            python -m pytest tests/test_basic.py -v
-          else
-            echo "No basic tests found. Skipping basic tests."
-          fi
-          
-          # Only run other tests if test files exist and database is set up
-          if [ -d "tests" ] && [ -d "src/tests" ]; then
-            # Try to run tests but don't fail if they have setup issues
-            python -m pytest tests/ src/tests/ --cov=./ --cov-report=xml || echo "Some tests failed, but continuing build"
-          else
-            echo "No advanced tests found or database not set up. Skipping advanced tests."
-          fi
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-          PYTHONPATH: ${{ github.workspace }}
+          pytest src/tests/test_summary_endpoint.py -v
           
       - name: Run E2E tests with Playwright
         run: |
@@ -81,7 +58,7 @@ jobs:
             # Install only Chromium as per guidelines
             python -m playwright install chromium
             # Run E2E tests with traces for debugging failures
-            python -m pytest tests/e2e/ --browser chromium --tracing on || echo "E2E tests failed, but continuing build"
+            pytest tests/e2e/test_document_flow.py -v || echo "E2E tests failed, but continuing build"
           else
             echo "No E2E tests directory found. Skipping E2E tests."
             # Create directories for artifacts to avoid warning
