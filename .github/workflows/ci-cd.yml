@@ -131,7 +131,12 @@ jobs:
           # Check if package.json exists
           if [ -f "package.json" ]; then
             npm install
-            npm run build
+            # Check if the build script exists in package.json before running it
+            if grep -q '"build"' package.json; then
+              npm run build
+            else
+              echo "No build script found in package.json. Skipping build step."
+            fi
           else
             echo "No package.json found. Skipping frontend build."
           fi

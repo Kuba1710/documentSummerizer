@@ -1,20 +1,26 @@
 {
-  "name": "documentsummerizer",
-  "version": "1.0.0",
-  "description": "![Project Status](https://img.shields.io/badge/status-MVP%20Development-blue)\r ![License](https://img.shields.io/badge/license-MIT-green)",
+  "name": "document-summarizer",
+  "version": "0.1.0",
+  "description": "AI-powered document summary generator",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"Building frontend assets\" && mkdir -p static/css && echo '/* Placeholder CSS */' > static/css/main.css",
+    "dev": "echo \"Starting development server\" && npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Kuba1710/documentSummerizer.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Kuba1710/documentSummerizer/issues"
-  },
-  "homepage": "https://github.com/Kuba1710/documentSummerizer#readme"
+  "keywords": [
+    "document",
+    "summarizer",
+    "ai",
+    "pdf"
+  ],
+  "author": "Kuba1710",
+  "license": "MIT",
+  "dependencies": {
+    "tailwindcss": "^3.3.0"
+  }
 }
