@@ -14,6 +14,18 @@ Backend:
 - PyMuPDF: wydajna biblioteka do przetwarzania i ekstrakcji tekstu z plików PDF
 - SciBert: wyspecjalizowany model AI do podsumowywania tekstów naukowych
 
+Narzędzia do testowania:
+
+- Pytest: framework do testów jednostkowych i integracyjnych
+- Pytest-asyncio: rozszerzenie do testowania kodu asynchronicznego
+- FastAPI TestClient: do testowania endpoints API
+- Selenium/Playwright: do testów End-to-End interfejsu użytkownika
+- Axe: do testów dostępności interfejsu
+- Locust: do testów wydajnościowych i obciążeniowych
+- Prometheus i Grafana: do monitorowania wydajności
+- OWASP ZAP: do skanowania podatności bezpieczeństwa
+- Bandit: do analizy statycznej kodu Python pod kątem bezpieczeństwa
+
 CI/CD i wdrożenie:
 
 -GitHub Actions: automatyzacja procesów testowania i wdrażania

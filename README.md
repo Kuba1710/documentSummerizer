@@ -48,6 +48,14 @@ Reading entire scientific texts and academic documents is time-consuming. Many u
 - **PyMuPDF**: Efficient library for processing and extracting text from PDF files
 - **SciBert**: Specialized AI model for summarizing scientific texts
 
+### Testing
+- **Pytest**: Framework for unit and integration tests
+- **Pytest-asyncio**: Extension for testing asynchronous code
+- **FastAPI TestClient**: For API endpoint testing
+- **Selenium/Playwright**: For end-to-end UI testing
+- **Locust**: For load and performance testing 
+- **Bandit**: For security testing of Python code
+
 ### CI/CD and Deployment
 - **GitHub Actions**: Automation of testing and deployment processes
 
