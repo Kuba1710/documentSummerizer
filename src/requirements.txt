@@ -30,3 +30,7 @@ apscheduler==3.10.1
 supabase==1.0.3
 starlette==0.26.1
 bcrypt==4.0.1 
+asyncpg>=0.27.0
+transformers>=4.30.2
+pytest-cov>=4.1.0
+playwright>=1.41.0
