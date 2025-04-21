@@ -93,7 +93,13 @@ pip install -r requirements.txt
 ```bash
 # Create .env file with the following variables
 DATABASE_URL=postgresql://username:password@localhost:5432/scisummarize
+# For async database operations
+ASYNC_DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/scisummarize
 SECRET_KEY=your_secret_key
+# For development only (set to 127.0.0.1 in production)
+APP_HOST=127.0.0.1
+APP_PORT=8000
+DEV_RELOAD=true
 ```
 
 5. Set up the database
