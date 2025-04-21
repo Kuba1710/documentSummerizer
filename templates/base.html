@@ -3,168 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
-  <link rel="icon" href="{{ url_for('static', path='/images/favicon.ico') }}">
-  <meta name="description" content="SciSummarize - An AI-powered tool for summarizing scientific papers and academic documents">
-  <!-- Add page-specific meta tags -->
-  {% block meta %}{% endblock %}
-  <!-- Add page-specific CSS -->
-  {% block styles %}{% endblock %}
-  <!-- Include Chart.js for visualizations -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <title>{% block title %}Document Summarizer{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body data-page="{{ page_name|default('home') }}">
-  <header>
-    <!-- Dodanie komponentu nagłówka z obsługą autentykacji -->
-    {% include "components/header.html" %}
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-blue-600 text-white shadow-md">
+    <div class="container mx-auto px-4 py-4">
+      <h1 class="text-2xl font-bold">Document Summarizer</h1>
+    </div>
   </header>
-
-  <main>
+  
+  <main class="container mx-auto px-4 py-8">
     {% block content %}
-    <section class="hero">
-      <div class="hero-content">
-        <h1>Transform Scientific Documents into Clear Summaries</h1>
-        <p>SciSummarize uses AI to analyze and summarize complex academic papers, research documents, and scientific literature.</p>
-        <div class="hero-buttons">
-          <a href="/documents/upload" class="btn btn-primary">Upload Document</a>
-          <a href="/search" class="btn btn-secondary">Browse Documents</a>
-        </div>
-      </div>
-      <div class="hero-image">
-        <!-- Placeholder for hero image -->
-        <div style="background-color: #f0f5ff; width: 300px; height: 200px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-          <span style="color: #0066cc;">Document Illustration</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="features">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <!-- Placeholder for icon -->
-          <div style="background-color: #e6f2ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <span style="font-weight: bold; color: #0066cc;">AI</span>
-          </div>
-        </div>
-        <h3>AI-Powered Summarization</h3>
-        <p>Our advanced AI models extract key information from complex documents, saving you hours of reading.</p>
-      </div>
-      
-      <div class="feature-card">
-        <div class="feature-icon">
-          <!-- Placeholder for icon -->
-          <div style="background-color: #e6f2ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <span style="font-weight: bold; color: #0066cc;">📊</span>
-          </div>
-        </div>
-        <h3>Visualize Insights</h3>
-        <p>Transform data into meaningful visualizations to quickly understand relationships and trends.</p>
-      </div>
-      
-      <div class="feature-card">
-        <div class="feature-icon">
-          <!-- Placeholder for icon -->
-          <div style="background-color: #e6f2ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <span style="font-weight: bold; color: #0066cc;">👥</span>
-          </div>
-        </div>
-        <h3>Collaborate & Share</h3>
-        <p>Share summaries with colleagues and collaborate on research in real-time.</p>
-      </div>
-    </section>
-
-    <section class="how-it-works">
-      <h2>How It Works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Upload Document</h3>
-          <p>Upload your scientific paper or academic document in PDF format.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>AI Processing</h3>
-          <p>Our AI analyzes the document, extracting key information and insights.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Review & Edit</h3>
-          <p>Review the generated summary and make any necessary edits or refinements.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">4</div>
-          <h3>Export & Share</h3>
-          <p>Export your summary in various formats or share directly with colleagues.</p>
-        </div>
-      </div>
-    </section>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Welcome to Document Summarizer</h2>
+      <p class="mb-4">Upload and summarize your documents with AI.</p>
+    </div>
     {% endblock %}
   </main>
-
-  <footer>
-    <div class="footer-content">
-      <div class="footer-logo">
-        <!-- Fallback for footer logo -->
-        <span style="font-weight: bold; font-size: 1.2rem; color: white;">SciSummarize</span>
-      </div>
-      
-      <div class="footer-links">
-        <div class="footer-section">
-          <h4>Product</h4>
-          <ul>
-            <li><a href="/features">Features</a></li>
-            <li><a href="/pricing">Pricing</a></li>
-            <li><a href="/faq">FAQ</a></li>
-          </ul>
-        </div>
-        
-        <div class="footer-section">
-          <h4>Company</h4>
-          <ul>
-            <li><a href="/about">About Us</a></li>
-            <li><a href="/blog">Blog</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ul>
-        </div>
-        
-        <div class="footer-section">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/privacy">Privacy Policy</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    
-    <div class="footer-bottom">
-      <p>&copy; 2023 SciSummarize. All rights reserved.</p>
+  
+  <footer class="bg-gray-800 text-white py-4 mt-auto">
+    <div class="container mx-auto px-4 text-center">
+      <p>© 2025 Document Summarizer</p>
     </div>
   </footer>
-
-  <!-- Include JavaScript modules in correct order -->
-  <script src="{{ url_for('static', path='/js/api.js') }}"></script>
-  
-  <!-- Conditionally load scripts based on page name -->
-  {% if page_name != 'upload' %}
-  <script src="{{ url_for('static', path='/js/settings.js') }}"></script> 
-  <script src="{{ url_for('static', path='/js/search.js') }}"></script>
-  <script src="{{ url_for('static', path='/js/feedback.js') }}"></script>
-  <script src="{{ url_for('static', path='/js/document.js') }}"></script>
-  <script src="{{ url_for('static', path='/js/auth.js') }}"></script>
-  <script src="{{ url_for('static', path='/js/visualize.js') }}"></script>
-  <script src="{{ url_for('static', path='/js/export.js') }}"></script>
-  {% endif %}
-  
-  <!-- We'll handle upload.js in the specific page where needed -->
-  {% if page_name != 'upload' %}
-  <script src="{{ url_for('static', path='/js/upload.js') }}"></script>
-  {% endif %}
-  
-  <script src="{{ url_for('static', path='/js/main.js') }}"></script>
-  
-  <!-- Add page-specific scripts -->
-  {% block scripts %}{% endblock %}
 </body>
 </html> 
