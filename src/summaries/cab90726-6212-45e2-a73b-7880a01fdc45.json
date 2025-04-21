@@ -1,0 +1,8 @@
+{
+  "id": "83110984-5ae0-4c82-9798-56dd051083a7",
+  "document_id": "cab90726-6212-45e2-a73b-7880a01fdc45",
+  "content": "Attention Is All You Need Ashish Vaswani\u2217 Google Brain avaswani@google.com Noam Shazeer\u2217 Google Brain noam@google.com Niki Parmar\u2217 Google Research nikip@google.com Jakob Uszkoreit\u2217 Google Research usz@google.com Llion Jones\u2217 Google Research llion@google.com Aidan N. Gomez\u2217\u2020 University of Toronto aidan@cs.toronto.edu \u0141ukasz Kaiser\u2217 Google Brain lukaszkaiser@google.com Illia Polosukhin\u2217\u2021 illia.polosukhin@gmail.com Abstract The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions...",
+  "version": 1,
+  "is_current": true,
+  "created_at": "2025-04-21T12:23:35.563861"
+}

@@ -3,399 +3,262 @@
  * Handles document uploads and processing
  */
 
-// Create global Upload object
-window.Upload = {};
-
-// Cache DOM elements
-const elements = {
-  uploadForm: null,
-  fileInput: null,
-  titleInput: null,
-  descriptionInput: null,
-  tagsInput: null,
-  submitButton: null,
-  cancelButton: null,
-  progressBar: null,
-  errorMessage: null,
-  successMessage: null
-};
-
-// Upload state
-const state = {
-  isUploading: false,
-  selectedFile: null,
-  progress: 0
-};
-
-/**
- * Initialize upload module
- */
-window.Upload.init = function() {
-  console.log('Initializing upload module...');
-  
-  // Cache DOM elements
-  cacheElements();
-  
-  // Setup event listeners
-  setupEventListeners();
-  
-  // Setup drag and drop
-  setupDragAndDrop();
-  
-  return Promise.resolve();
-};
-
-/**
- * Cache DOM elements for better performance
- */
-function cacheElements() {
-  elements.uploadForm = document.getElementById('upload-form');
-  elements.fileInput = document.getElementById('file-input');
-  elements.titleInput = document.getElementById('title-input');
-  elements.descriptionInput = document.getElementById('description-input');
-  elements.tagsInput = document.getElementById('tags-input');
-  elements.submitButton = document.getElementById('submit-upload');
-  elements.cancelButton = document.getElementById('cancel-upload');
-  elements.progressBar = document.getElementById('upload-progress');
-  elements.errorMessage = document.getElementById('upload-error');
-  elements.successMessage = document.getElementById('upload-success');
-  elements.dropZone = document.getElementById('drop-zone');
-}
-
-/**
- * Set up event listeners
- */
-function setupEventListeners() {
-  // File input change
-  if (elements.fileInput) {
-    elements.fileInput.addEventListener('change', handleFileSelect);
-  }
-  
-  // Form submission
-  if (elements.uploadForm) {
-    elements.uploadForm.addEventListener('submit', handleFormSubmit);
-  }
-  
-  // Cancel button
-  if (elements.cancelButton) {
-    elements.cancelButton.addEventListener('click', handleCancel);
-  }
-}
-
-/**
- * Setup drag and drop functionality
- */
-function setupDragAndDrop() {
-  const dropZone = elements.dropZone;
-  if (!dropZone) return;
-  
-  // Prevent default behavior
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-  });
-  
-  function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  
-  // Highlight drop zone on drag
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, highlight, false);
-  });
-  
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, unhighlight, false);
-  });
-  
-  function highlight() {
-    dropZone.classList.add('drag-highlight');
-  }
-  
-  function unhighlight() {
-    dropZone.classList.remove('drag-highlight');
-  }
-  
-  // Handle dropped files
-  dropZone.addEventListener('drop', handleDrop, false);
-  
-  function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Upload.js loaded');
     
-    if (files.length > 0) {
-      elements.fileInput.files = files;
-      handleFileSelect({ target: elements.fileInput });
+    // DOM Elements
+    const fileInput = document.getElementById('fileInput');
+    const dropArea = document.getElementById('dropArea');
+    const fileName = document.getElementById('fileName');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const progressBar = document.getElementById('progressBar');
+    const statusMessage = document.getElementById('statusMessage');
+    const summaryLengthSelect = document.getElementById('summaryLength');
+    const customLengthContainer = document.getElementById('customLengthContainer');
+    const submitButton = document.getElementById('submitButton');
+    const errorContainer = document.getElementById('errorContainer');
+
+    console.log('Elements found:', {
+        fileInput: !!fileInput,
+        dropArea: !!dropArea,
+        fileName: !!fileName,
+        uploadForm: !!uploadForm,
+        submitButton: !!submitButton
+    });
+
+    // Function to show errors
+    function showError(message) {
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+            
+            // Scroll to error
+            errorContainer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            // Fallback to alert if container not found
+            alert(message);
+        }
+        
+        // Hide the loading indicator
+        if (uploadStatus) {
+            uploadStatus.style.display = 'none';
+        }
     }
-  }
-}
-
-/**
- * Handle file selection
- * @param {Event} event - Change event
- */
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  
-  if (!file) return;
-  
-  // Check file type
-  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-  
-  if (!allowedTypes.includes(file.type)) {
-    showError('Invalid file type. Please upload a PDF, DOC, DOCX, or TXT file.');
-    elements.fileInput.value = '';
-    return;
-  }
-  
-  // Check file size (10MB max)
-  const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-  
-  if (file.size > maxSize) {
-    showError('File too large. Maximum size is 10MB.');
-    elements.fileInput.value = '';
-    return;
-  }
-  
-  // Store selected file
-  state.selectedFile = file;
-  
-  // Update file name display
-  const fileNameDisplay = document.getElementById('selected-file-name');
-  if (fileNameDisplay) {
-    fileNameDisplay.textContent = file.name;
-    fileNameDisplay.parentElement.classList.remove('hidden');
-  }
-  
-  // Auto-fill title based on filename
-  if (elements.titleInput && !elements.titleInput.value) {
-    // Remove extension and replace dashes/underscores with spaces
-    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-    elements.titleInput.value = nameWithoutExt.replace(/[-_]/g, ' ');
-  }
-  
-  // Hide any previous errors
-  hideError();
-}
-
-/**
- * Handle form submission
- * @param {Event} event - Submit event
- */
-async function handleFormSubmit(event) {
-  event.preventDefault();
-  
-  if (state.isUploading) return;
-  
-  // Validate form
-  if (!state.selectedFile) {
-    showError('Please select a file to upload.');
-    return;
-  }
-  
-  if (elements.titleInput && !elements.titleInput.value.trim()) {
-    showError('Please enter a title for the document.');
-    elements.titleInput.focus();
-    return;
-  }
-  
-  // Set uploading state
-  state.isUploading = true;
-  state.progress = 0;
-  updateProgressBar();
-  
-  // Disable form controls
-  toggleFormControls(false);
-  
-  // Prepare form data
-  const formData = new FormData();
-  formData.append('file', state.selectedFile);
-  formData.append('title', elements.titleInput.value.trim());
-  
-  if (elements.descriptionInput && elements.descriptionInput.value.trim()) {
-    formData.append('description', elements.descriptionInput.value.trim());
-  }
-  
-  if (elements.tagsInput && elements.tagsInput.value.trim()) {
-    // Split tags by comma and trim whitespace
-    const tags = elements.tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
     
-    formData.append('tags', JSON.stringify(tags));
-  }
-  
-  try {
-    // Simulate progress updates
-    const progressInterval = simulateProgress();
-    
-    // Upload document
-    const response = await window.API.documents.upload(formData);
-    
-    // Clear interval
-    clearInterval(progressInterval);
-    
-    // Set progress to 100%
-    state.progress = 100;
-    updateProgressBar();
-    
-    // Show success message
-    showSuccess('Document uploaded successfully!');
-    
-    // Redirect to document page after a short delay
-    setTimeout(() => {
-      window.location.href = `/documents/${response.id}`;
-    }, 1500);
-  } catch (error) {
-    console.error('Upload error:', error);
-    showError(error.message || 'Failed to upload document. Please try again.');
-    
-    // Reset upload state
-    state.isUploading = false;
-    state.progress = 0;
-    updateProgressBar();
-    
-    // Re-enable form controls
-    toggleFormControls(true);
-  }
-}
-
-/**
- * Simulate progress updates for better UX
- * @returns {number} Interval ID
- */
-function simulateProgress() {
-  return setInterval(() => {
-    if (state.progress < 90) {
-      state.progress += Math.random() * 10;
-      if (state.progress > 90) state.progress = 90;
-      updateProgressBar();
+    // Function to hide errors
+    function hideError() {
+        if (errorContainer) {
+            errorContainer.style.display = 'none';
+        }
     }
-  }, 500);
-}
 
-/**
- * Update progress bar with current progress
- */
-function updateProgressBar() {
-  if (!elements.progressBar) return;
-  
-  const progressContainer = elements.progressBar.parentElement;
-  
-  if (state.isUploading) {
-    progressContainer.classList.remove('hidden');
-    elements.progressBar.style.width = `${state.progress}%`;
-    elements.progressBar.setAttribute('aria-valuenow', state.progress);
-  } else {
-    progressContainer.classList.add('hidden');
-  }
-}
-
-/**
- * Toggle form controls enabled/disabled state
- * @param {boolean} enabled - Whether controls should be enabled
- */
-function toggleFormControls(enabled) {
-  const controls = [
-    elements.fileInput,
-    elements.titleInput,
-    elements.descriptionInput,
-    elements.tagsInput,
-    elements.submitButton
-  ];
-  
-  controls.forEach(control => {
-    if (control) {
-      control.disabled = !enabled;
+    // File selection handler
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            console.log('File selected');
+            
+            // Hide any previous errors when file is selected
+            hideError();
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                console.log('File name:', file.name);
+                
+                // Display file name
+                if (fileName) {
+                    fileName.textContent = file.name;
+                    fileName.style.display = 'block';
+                }
+                
+                // Add 'has-file' class to drop area
+                if (dropArea) {
+                    dropArea.classList.add('has-file');
+                }
+            }
+        });
     }
-  });
-  
-  if (elements.uploadForm) {
-    if (enabled) {
-      elements.uploadForm.classList.remove('uploading');
-    } else {
-      elements.uploadForm.classList.add('uploading');
+
+    // Enhanced Form submission handler
+    if (uploadForm) {
+        console.log('Setting up form submission handler');
+        
+        // Use both the form submit event and button click as a backup
+        uploadForm.addEventListener('submit', handleFormSubmit);
+        
+        if (submitButton) {
+            submitButton.addEventListener('click', function(e) {
+                console.log('Submit button clicked directly');
+            });
+        }
     }
-  }
-}
+    
+    function handleFormSubmit(e) {
+        console.log('Form submission detected');
+        e.preventDefault();
+        console.log('Default form submission prevented');
+        
+        // Clear any previous errors
+        hideError();
+        
+        if (!fileInput || fileInput.files.length === 0) {
+            showError('Please select a file to upload');
+            console.log('No file selected, submission stopped');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        console.log('Proceeding with file:', file.name);
+        
+        // Check file type
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            showError('Only PDF files are currently supported');
+            console.log('Invalid file type, submission stopped');
+            return;
+        }
+        
+        // Show upload status
+        if (uploadStatus) {
+            uploadStatus.style.display = 'block';
+            console.log('Upload status display shown');
+        }
+        
+        // Create FormData
+        const formData = new FormData();
+        
+        // Explicitly add the file with the correct field name
+        formData.append('file', file, file.name);
+        console.log('File added to FormData with name:', file.name);
+        
+        // Debug - log contents of FormData
+        console.log('FormData contents:');
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}: File - ${value.name} (${value.type}, ${value.size} bytes)`);
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
+        
+        // Get summary options
+        const summaryLength = summaryLengthSelect ? summaryLengthSelect.value : 'medium';
+        formData.append('summaryLength', summaryLength);
+        console.log('Summary length set to:', summaryLength);
+        
+        if (summaryLength === 'custom' && document.getElementById('customLength')) {
+            const customLength = document.getElementById('customLength').value;
+            formData.append('customLength', customLength);
+            console.log('Custom length set to:', customLength);
+        }
+        
+        // Add focus areas if selected
+        const focusAreas = document.getElementById('focusArea');
+        if (focusAreas && focusAreas.selectedOptions) {
+            Array.from(focusAreas.selectedOptions).forEach(option => {
+                formData.append('focusAreas', option.value);
+                console.log('Focus area added:', option.value);
+            });
+        }
+        
+        // Add checkbox values
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            formData.append(checkbox.name, checkbox.checked);
+            console.log('Checkbox value added:', checkbox.name, checkbox.checked);
+        });
+        
+        console.log('Sending fetch request to /upload-document');
+        
+        // Submit the form with proper authentication - using our new proxy endpoint
+        fetch('/upload-document', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            // No need for Authorization header as we're using middleware authentication
+        })
+        .then(response => {
+            console.log('Received response:', response.status);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Authentication required. Please log in.');
+                } else if (response.status === 415) {
+                    throw new Error('Only PDF files are supported.');
+                } else {
+                    throw new Error('Upload failed with status: ' + response.status);
+                }
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Upload successful, response data:', data);
+            if (data.documentId) {
+                console.log('Redirecting to document view:', data.documentId);
+                window.location.href = `/documents/${data.documentId}`;
+            } else {
+                console.log('Redirecting to documents list');
+                window.location.href = '/documents';
+            }
+        })
+        .catch(error => {
+            console.error('Upload error:', error);
+            showError(error.message || 'An error occurred during upload');
+            console.log('Error message displayed to user');
+        });
+    }
 
-/**
- * Handle cancel button click
- */
-function handleCancel() {
-  // Reset form
-  if (elements.uploadForm) {
-    elements.uploadForm.reset();
-  }
-  
-  // Reset state
-  state.selectedFile = null;
-  state.isUploading = false;
-  state.progress = 0;
-  
-  // Update UI
-  updateProgressBar();
-  hideError();
-  hideSuccess();
-  
-  // Hide filename display
-  const fileNameDisplay = document.getElementById('selected-file-name');
-  if (fileNameDisplay) {
-    fileNameDisplay.parentElement.classList.add('hidden');
-  }
-  
-  // Re-enable form controls
-  toggleFormControls(true);
-}
+    // Summary length change handler
+    if (summaryLengthSelect && customLengthContainer) {
+        summaryLengthSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customLengthContainer.style.display = 'block';
+            } else {
+                customLengthContainer.style.display = 'none';
+            }
+        });
+    }
 
-/**
- * Show error message
- * @param {string} message - Error message
- */
-function showError(message) {
-  if (!elements.errorMessage) return;
-  
-  elements.errorMessage.textContent = message;
-  elements.errorMessage.classList.remove('hidden');
-  
-  // Hide success message if visible
-  hideSuccess();
-}
+    // Setup drag and drop
+    if (dropArea) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
 
-/**
- * Hide error message
- */
-function hideError() {
-  if (!elements.errorMessage) return;
-  
-  elements.errorMessage.textContent = '';
-  elements.errorMessage.classList.add('hidden');
-}
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
-/**
- * Show success message
- * @param {string} message - Success message
- */
-function showSuccess(message) {
-  if (!elements.successMessage) return;
-  
-  elements.successMessage.textContent = message;
-  elements.successMessage.classList.remove('hidden');
-  
-  // Hide error message if visible
-  hideError();
-}
+        // Highlight drop area when file is dragged over
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
 
-/**
- * Hide success message
- */
-function hideSuccess() {
-  if (!elements.successMessage) return;
-  
-  elements.successMessage.textContent = '';
-  elements.successMessage.classList.add('hidden');
-}
+        // Remove highlight when file is dragged out or dropped
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
 
-// Make upload functions available globally
-window.Upload.uploadDocument = handleFormSubmit; 
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                
+                // Trigger change event
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        }
+    }
+}); 

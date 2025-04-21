@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+    <h1 class="text-2xl font-bold mb-2">Document Summary</h1>
+    <h2 class="text-lg text-gray-600 mb-6">{{ document_name }}</h2>
+    
+    <!-- Summary Content -->
+    <div class="border rounded-lg p-6 bg-gray-50 mb-6">
+        <h3 class="text-xl font-semibold mb-4">Generated Summary</h3>
+        <div class="prose max-w-none">
+            <p>{{ summary.content }}</p>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="flex flex-wrap justify-between gap-4">
+        <div>
+            <a href="/documents/{{ document_id }}" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Document
+            </a>
+        </div>
+        
+        <div class="flex gap-2">
+            <button id="copy-button" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Copy Summary
+            </button>
+            
+            <button id="download-button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download PDF
+            </button>
+        </div>
+    </div>
+    
+    <!-- Feedback Section -->
+    <div class="mt-8 border-t pt-6">
+        <h3 class="text-xl font-semibold mb-4">Provide Feedback</h3>
+        <p class="text-gray-600 mb-4">Was this summary helpful? Your feedback helps us improve our summarization algorithm.</p>
+        
+        <div class="flex gap-4">
+            <button id="thumbs-up" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-green-100 text-gray-800 rounded-md border border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                </svg>
+                Helpful
+            </button>
+            
+            <button id="thumbs-down" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-red-100 text-gray-800 rounded-md border border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.737 3h4.017c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                </svg>
+                Not Helpful
+            </button>
+        </div>
+        
+        <div id="feedback-sent" class="hidden mt-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
+            <p>Thank you for your feedback!</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copy-button');
+        const downloadButton = document.getElementById('download-button');
+        const thumbsUpButton = document.getElementById('thumbs-up');
+        const thumbsDownButton = document.getElementById('thumbs-down');
+        const feedbackSent = document.getElementById('feedback-sent');
+        
+        // Copy summary to clipboard
+        copyButton.addEventListener('click', function() {
+            const summaryText = document.querySelector('.prose p').textContent;
+            
+            navigator.clipboard.writeText(summaryText).then(function() {
+                // Change button text temporarily
+                const originalText = copyButton.innerHTML;
+                copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Copied!';
+                
+                setTimeout(function() {
+                    copyButton.innerHTML = originalText;
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+        
+        // Download summary as PDF
+        downloadButton.addEventListener('click', function() {
+            alert('PDF download functionality will be implemented in the future.');
+        });
+        
+        // Handle feedback
+        [thumbsUpButton, thumbsDownButton].forEach(function(button) {
+            button.addEventListener('click', function() {
+                // Send feedback (in a real implementation, this would make an API call)
+                const isHelpful = button.id === 'thumbs-up';
+                
+                // Show feedback confirmation
+                feedbackSent.classList.remove('hidden');
+                
+                // In a real implementation, you would submit this to an API
+                console.log('Feedback sent:', isHelpful ? 'Helpful' : 'Not Helpful');
+                
+                // Disable both buttons
+                thumbsUpButton.disabled = true;
+                thumbsDownButton.disabled = true;
+                
+                // Add visual indication
+                if (isHelpful) {
+                    thumbsUpButton.classList.add('bg-green-200', 'border-green-500');
+                    thumbsDownButton.classList.add('opacity-50');
+                } else {
+                    thumbsDownButton.classList.add('bg-red-200', 'border-red-500');
+                    thumbsUpButton.classList.add('opacity-50');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

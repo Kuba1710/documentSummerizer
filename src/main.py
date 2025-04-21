@@ -10,8 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from db.database import init_db
-from routers import summary_router, page_router
-from routers.auth import router as auth_router
+from routers import summary_router, page_router, auth_router
+from routers.api_auth_router import router as api_auth_router
 from auth.middleware import auth_middleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -88,9 +88,10 @@ async def log_requests(request: Request, call_next):
 app.middleware("http")(auth_middleware)
 
 # Dodawanie routerów
-app.include_router(summary_router.router)
+app.include_router(summary_router)
 app.include_router(auth_router)
-app.include_router(page_router.router)
+app.include_router(api_auth_router)
+app.include_router(page_router)
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

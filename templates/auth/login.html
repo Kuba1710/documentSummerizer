@@ -30,7 +30,13 @@
         </div>
     {% endif %}
 
-    <form id="login-form" action="/auth/login" method="post">
+    {% if request.query_params.get("error") %}
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p>{{ request.query_params.get("error") }}</p>
+        </div>
+    {% endif %}
+
+    <form id="login-form" action="/api/auth/login" method="post">
         <div class="mb-4">
             <label for="login" class="block text-gray-700 text-sm font-bold mb-2">Login:</label>
             <input type="text" id="login" name="login" value="{{ login or '' }}" required

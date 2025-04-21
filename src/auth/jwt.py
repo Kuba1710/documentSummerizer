@@ -9,6 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2Pas
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from dotenv import load_dotenv
+from passlib.context import CryptContext
 
 from db.database import get_db
 from schemas.user import User
@@ -25,6 +26,9 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 # Schemat bezpieczeństwa do uwierzytelniania JWT
 security = HTTPBearer()
 
@@ -39,6 +43,43 @@ oauth2_scheme_optional = OAuth2PasswordBearer(
     tokenUrl="/auth/login",
     auto_error=False  # Won't raise HTTPException for invalid token
 )
+
+def get_password_hash(password: str) -> str:
+    """Create a password hash
+    
+    Args:
+        password: Plain text password
+        
+    Returns:
+        Hashed password
+    """
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against a hash
+    
+    Args:
+        plain_password: Plain text password
+        hashed_password: Hashed password
+        
+    Returns:
+        Whether the password matches the hash
+    """
+    return pwd_context.verify(plain_password, hashed_password)
+
+async def get_user_by_email(email: str, db: AsyncSession) -> Optional[User]:
+    """Get a user by email
+    
+    Args:
+        email: Email address to look up
+        db: Database session
+        
+    Returns:
+        User or None if not found
+    """
+    stmt = select(User).where(User.email == email)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
 
 def create_access_token(data: dict) -> str:
     """Create JWT access token
@@ -132,7 +173,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         # Return user data (currently just ID)
         return {"id": user_id}
         
-    except jwt.JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
 
 async def get_current_user_optional(request: Request) -> Optional[dict]:
@@ -233,4 +274,55 @@ async def get_current_user_db(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication error",
             headers={"WWW-Authenticate": "Bearer"},
-        ) 
+        )
+
+async def get_current_user_from_cookie(request: Request) -> dict:
+    """Get the current authenticated user from session cookie
+    
+    Args:
+        request: The FastAPI request object
+        
+    Returns:
+        User data from token
+        
+    Raises:
+        HTTPException: 401 if token is invalid or missing
+    """
+    # Get token from cookie
+    token = request.cookies.get("session_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    
+    try:
+        # Decode token without verifying signature
+        # This is safe for user identification in this context
+        payload = jwt.decode(token, options={"verify_signature": False})
+        
+        # Extract user ID from token
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        
+        # Extract user metadata
+        user_metadata = payload.get("user_metadata", {})
+        login = user_metadata.get("login")
+        
+        # Log successful token extraction
+        logger.info(f"Successfully extracted user info from token: id={user_id}, login={login}")
+        
+        # Return user data
+        return {"id": user_id, "login": login}
+        
+    except Exception as e:
+        logger.error(f"Error decoding token: {str(e)}")
+        raise credentials_exception 

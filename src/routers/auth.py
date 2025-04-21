@@ -1,7 +1,23 @@
-from fastapi import APIRouter, Request, Response, Depends, HTTPException, status, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Form, Body
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.encoders import jsonable_encoder
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List, Dict, Any
+from sqlalchemy.orm import Session
 import os
+import random
+import string
+import logging
+
+from db.database import get_db
+from schemas.user import User
+from models.auth import UserCreate, UserUpdate, UserResponse
+from auth.jwt import create_access_token, get_password_hash, verify_password, get_current_user, get_user_by_email
 from schemas.auth import RegisterSchema, LoginSchema, ResetPasswordSchema, SetNewPasswordSchema
 from auth.service import AuthService
 from auth.exceptions import AuthenticationError, RegistrationError, ResetPasswordError

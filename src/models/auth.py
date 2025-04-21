@@ -12,6 +12,12 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100)
     email: Optional[EmailStr] = None
 
+class UserUpdate(UserBase):
+    """Model for updating user info"""
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    password: Optional[str] = Field(None, min_length=8, max_length=100)
+    email: Optional[EmailStr] = None
+
 class UserResponse(UserBase):
     """API response model for user operations"""
     id: UUID

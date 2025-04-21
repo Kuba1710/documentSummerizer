@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from pathlib import Path
 from datetime import datetime
+import uuid
+import json
 
 from models.summary import SummaryCreate, SummaryInDB
 from schemas.summary import Summary
@@ -19,8 +21,12 @@ logger = logging.getLogger(__name__)
 class SummaryService:
     """Service for managing document summaries"""
     
-    def __init__(self, db_session: Session):
-        """Initialize the service with database session"""
+    def __init__(self, db_session: Session = None):
+        """Initialize the service with database session
+        
+        Args:
+            db_session: SQLAlchemy database session, can be None for file-based operations
+        """
         self.db = db_session
         # W rzeczywistej implementacji załadowalibyśmy model SciBert tutaj
         # self.scibert_model = self._load_scibert_model()
@@ -184,36 +190,60 @@ class SummaryService:
         Raises:
             HTTPException: Various error codes based on the specific error
         """
-        # 1. Pobierz dokument
-        document = await self.get_document(document_id)
-        
-        # 2. Wyodrębnij tekst
-        text = await self.extract_text(document.file_path)
-        
-        # 3. Wygeneruj podsumowanie
-        summary_content = await self.generate_summary(text)
-        
-        # 4. Zapisz w bazie danych
         try:
-            # Utwórz nowe podsumowanie
-            new_summary = Summary(
-                document_id=document_id,
-                content=summary_content,
-                version=1,  # Trigger zadba o ustawienie odpowiedniej wersji
-                is_current=True
-            )
+            # Define file path directly (since we're not using database records yet)
+            file_path = Path("uploads") / f"{document_id}.pdf"
             
-            # Dodaj do sesji i zapisz
-            self.db.add(new_summary)
-            await self.db.commit()
-            await self.db.refresh(new_summary)
+            if not file_path.exists():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Document file not found: {document_id}"
+                )
             
-            return new_summary
+            # 1. Extract text from the PDF
+            text = await self.extract_text(str(file_path))
             
+            # 2. Generate summary
+            summary_content = await self.generate_summary(text)
+            
+            # 3. Create summary object
+            summary = {
+                "id": uuid.uuid4(),
+                "document_id": document_id,
+                "content": summary_content,
+                "version": 1,
+                "is_current": True,
+                "created_at": datetime.now()
+            }
+            
+            # 4. In production, we would save to database
+            # For now, we'll save to a JSON file to maintain state
+            summaries_dir = Path("summaries")
+            summaries_dir.mkdir(exist_ok=True)
+            
+            summary_file = summaries_dir / f"{document_id}.json"
+            with open(summary_file, "w") as f:
+                # Convert UUID to string for JSON serialization
+                json_summary = {
+                    "id": str(summary["id"]),
+                    "document_id": str(summary["document_id"]),
+                    "content": summary["content"],
+                    "version": summary["version"],
+                    "is_current": summary["is_current"],
+                    "created_at": summary["created_at"].isoformat()
+                }
+                json.dump(json_summary, f, indent=2)
+            
+            logger.info(f"Summary created for document: {document_id}")
+            return summary
+            
+        except HTTPException:
+            # Re-raise HTTP exceptions
+            raise
+        
         except Exception as e:
-            await self.db.rollback()
-            logger.error(f"Error saving summary to database: {str(e)}")
+            logger.error(f"Error creating summary: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occurred while saving the summary"
+                detail=f"An error occurred while creating the summary: {str(e)}"
             ) 
