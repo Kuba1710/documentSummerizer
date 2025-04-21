@@ -6,8 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 async def auth_middleware(request: Request, call_next):
-    # Check for test mode header - allow bypassing auth for E2E tests
-    is_test_mode = request.headers.get("X-Test-Mode") == "true"
+    # Check for test mode header or query parameter - allow bypassing auth for E2E tests
+    is_test_mode = (request.headers.get("X-Test-Mode") == "true" or 
+                   request.query_params.get("test_mode") == "true")
     
     if is_test_mode:
         print(f"TEST MODE DETECTED - Authentication check bypassed for path: {request.url.path}")
